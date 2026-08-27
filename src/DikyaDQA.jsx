@@ -45,22 +45,27 @@ const LIGHT = {
 };
 
 const DARK = {
-  bg: "#0B0B0D", nav: "#141417", card: "#141417",
+  bg: "#0A0A0C", nav: "#131316", card: "#17171C",
   ink: "#FAFAFA", ink2: "#A1A1AA", ink3: "#71717A",
-  line: "#232327",
+  line: "#2A2A31",
   accent: "#8B7DFF", accentSoft: "#221F3D",
   pass: "#3DD9A0", passBg: "#102A22",
   almost: "#E5A93C", almostBg: "#2C2113",
   fix: "#FF7A72", fixBg: "#2E1614",
-  mute: "#A1A1AA", muteBg: "#1E1E22",
-  sunken: "#18181B", sunken2: "#161619", canvas: "#0F0F11",
-  track: "#2A2A30", ring: "#26262B", knob: "#3F3F46", tick: "#52525B",
-  onInk: "#09090B", codeBg: "#000000", codeFg: "#E4E4E7",
+  mute: "#A1A1AA", muteBg: "#212127",
+  sunken: "#101013", sunken2: "#131316", canvas: "#0D0D10",
+  track: "#2A2A31", ring: "#26262B", knob: "#3F3F46", tick: "#52525B",
+  onInk: "#0A0A0C", codeBg: "#000000", codeFg: "#E4E4E7",
   bmMargin: "#3A2E18", bmBorder: "#463621", bmPadding: "#173328", bmContent: "#16294A",
   bmMarginFg: "#D8B375", bmPaddingFg: "#6FCFA0", bmContentFg: "#8CB6F0",
-  shadow: "0 1px 2px rgba(0,0,0,.5), 0 10px 30px -18px rgba(0,0,0,.8)",
-  shadowLift: "0 1px 2px rgba(0,0,0,.6), 0 18px 44px -22px rgba(0,0,0,.9)",
-  hoverRow: "#1A1A1E", hoverSoft: "#232327", thumb: "#3F3F46",
+  /* A drop shadow does nothing on graphite — a dark shadow on a dark page is
+     invisible, so every card lost its edge and read as one flat field. The
+     inset hairline is what separates surfaces here; the drop shadow only adds
+     a little depth under it. Because `Card` and the category tiles both read
+     `T.shadow`, this gives every surface a border without touching them. */
+  shadow: "inset 0 0 0 1px #2A2A31, 0 1px 2px rgba(0,0,0,.5)",
+  shadowLift: "inset 0 0 0 1px #3A3A44, 0 12px 32px -14px rgba(0,0,0,.9)",
+  hoverRow: "#1C1C21", hoverSoft: "#232329", thumb: "#3F3F46",
 };
 
 const T = { ...LIGHT };
@@ -522,7 +527,7 @@ function ToleranceRuler({ delta, unit, closeBand, fixBand }) {
         <div className="absolute" style={{ top: 9, height: 6, left: `${cl}%`, width: `${cr - cl}%`, borderRadius: 999, backgroundColor: T.passBg }} />
         <div className="absolute" style={{ top: 6, left: "50%", width: 1.5, height: 12, backgroundColor: T.tick, transform: "translateX(-50%)" }} />
         <div className="absolute flex items-center justify-center"
-          style={{ top: 4, left: `${at}%`, transform: "translateX(-50%)", width: 16, height: 16, borderRadius: 999, backgroundColor: T.onInk, boxShadow: "0 1px 4px rgba(9,9,11,.28)" }}>
+          style={{ top: 4, left: `${at}%`, transform: "translateX(-50%)", width: 16, height: 16, borderRadius: 999, backgroundColor: T.card, boxShadow: "0 1px 4px rgba(9,9,11,.28)" }}>
           <span style={{ width: 8, height: 8, borderRadius: 999, backgroundColor: tone }} />
         </div>
       </div>
@@ -557,7 +562,7 @@ function Toggle({ on, onChange, label, sub }) {
       </span>
       <span className="shrink-0 flex items-center transition-colors"
         style={{ width: 34, height: 20, borderRadius: 999, backgroundColor: on ? T.ink : T.knob, padding: 2 }}>
-        <span style={{ width: 16, height: 16, borderRadius: 999, backgroundColor: T.onInk, transform: on ? "translateX(14px)" : "none", transition: "transform .18s", boxShadow: "0 1px 2px rgba(0,0,0,.2)" }} />
+        <span style={{ width: 16, height: 16, borderRadius: 999, backgroundColor: T.card, transform: on ? "translateX(14px)" : "none", transition: "transform .18s", boxShadow: "0 1px 2px rgba(0,0,0,.2)" }} />
       </span>
     </button>
   );
@@ -939,6 +944,16 @@ function ScanTab() {
   const [compareMode, setCompareMode] = useState("split");
   const [wipe, setWipe] = useState(50);
   const rail = useRef(null);
+  const [railEdge, setRailEdge] = useState({ start: true, end: false });
+
+  /* Measure once on mount so the right-hand fade is correct before the
+     first scroll — otherwise the mask claims there is nothing further
+     right when there is. */
+  useEffect(() => {
+    const el = rail.current;
+    if (!el) return;
+    setRailEdge({ start: el.scrollLeft <= 2, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+  }, []);
 
   useEffect(() => {
     if (!scanning) return;
@@ -978,22 +993,43 @@ function ScanTab() {
             </div>
             <div className="flex gap-1">
               <button onClick={() => rail.current?.scrollBy({ left: -260, behavior: "smooth" })}
-                className="flex items-center justify-center hover:dk-surface transition-colors" style={{ width: 26, height: 26, borderRadius: 999 }}>
+                className="flex items-center justify-center dk-hover-soft transition-colors" style={{ width: 26, height: 26, borderRadius: 999 }}>
                 <ChevronRight size={15} color={T.ink2} style={{ transform: "rotate(180deg)" }} />
               </button>
               <button onClick={() => rail.current?.scrollBy({ left: 260, behavior: "smooth" })}
-                className="flex items-center justify-center hover:dk-surface transition-colors" style={{ width: 26, height: 26, borderRadius: 999 }}>
+                className="flex items-center justify-center dk-hover-soft transition-colors" style={{ width: 26, height: 26, borderRadius: 999 }}>
                 <ChevronRight size={15} color={T.ink2} />
               </button>
             </div>
           </div>
-          <div ref={rail} className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {/* The rail is masked at whichever edge still has content behind it,
+              so a card scrolls out under a fade instead of hitting a hard wall
+              where the sidebar starts. `py-2 -my-1` gives the cards' shadows
+              room — overflow-x clips vertically too, which was shaving the
+              bottom off every tile. */}
+          <div
+            ref={rail}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              setRailEdge({
+                start: el.scrollLeft <= 2,
+                end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
+              });
+            }}
+            className="flex gap-3 overflow-x-auto px-1 py-2 -my-1"
+            style={{
+              scrollbarWidth: "none",
+              scrollSnapType: "x proximity",
+              maskImage: `linear-gradient(to right, transparent 0, #000 ${railEdge.start ? "0px" : "26px"}, #000 calc(100% - ${railEdge.end ? "0px" : "48px"}), transparent 100%)`,
+              WebkitMaskImage: `linear-gradient(to right, transparent 0, #000 ${railEdge.start ? "0px" : "26px"}, #000 calc(100% - ${railEdge.end ? "0px" : "48px"}), transparent 100%)`,
+            }}
+          >
             {CATEGORIES.map((c) => {
               const Icon = c.icon, on = category === c.id, na = c.score == null;
               const tone = na ? T.ink3 : c.score >= 90 ? T.pass : c.score >= 75 ? T.almost : T.fix;
               return (
                 <button key={c.id} onClick={() => setCategory(on ? null : c.id)} className="text-left shrink-0 p-4 transition-all"
-                  style={{ minWidth: 172, borderRadius: 16, backgroundColor: on ? T.ink : T.onInk, boxShadow: on ? T.shadowLift : T.shadow, color: on ? T.onInk : T.ink }}>
+                  style={{ minWidth: 172, borderRadius: 16, backgroundColor: on ? T.ink : T.card, boxShadow: on ? T.shadowLift : T.shadow, color: on ? T.onInk : T.ink }}>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center justify-center" style={{ width: 28, height: 28, borderRadius: 999, backgroundColor: on ? "rgba(255,255,255,.12)" : T.muteBg }}>
                       <Icon size={14} color={on ? T.onInk : T.ink2} />
@@ -1164,7 +1200,7 @@ function ScanTab() {
             <div className="flex items-center gap-1 p-1 mb-4" style={{ borderRadius: 999, backgroundColor: T.muteBg, width: "fit-content" }}>
               {["split", "overlay", "wipe"].map((m) => (
                 <button key={m} onClick={() => setCompareMode(m)} className="px-3.5 py-1.5 font-medium capitalize transition-colors"
-                  style={{ borderRadius: 999, fontSize: 12, backgroundColor: compareMode === m ? T.onInk : "transparent", color: compareMode === m ? T.ink : T.ink2, boxShadow: compareMode === m ? T.shadow : "none" }}>{m}</button>
+                  style={{ borderRadius: 999, fontSize: 12, backgroundColor: compareMode === m ? T.card : "transparent", color: compareMode === m ? T.ink : T.ink2, boxShadow: compareMode === m ? T.shadow : "none" }}>{m}</button>
               ))}
             </div>
             <div className="relative overflow-hidden" style={{ borderRadius: 14, backgroundColor: T.sunken, height: 300 }}>
@@ -1901,7 +1937,7 @@ function ViewportCanvas({
         <span className="flex items-center gap-1 p-1" style={{ borderRadius: 999, backgroundColor: T.muteBg }}>
           {["fit-all", "fit-width", "manual"].map((f) => (
             <button key={f} onClick={() => setFit(f)} className="px-2.5 py-1 font-medium transition-colors"
-              style={{ borderRadius: 999, fontSize: 11.5, backgroundColor: fit === f ? T.onInk : "transparent", color: fit === f ? T.ink : T.ink2, boxShadow: fit === f ? T.shadow : "none" }}>
+              style={{ borderRadius: 999, fontSize: 11.5, backgroundColor: fit === f ? T.card : "transparent", color: fit === f ? T.ink : T.ink2, boxShadow: fit === f ? T.shadow : "none" }}>
               {f.replace("-", " ")}
             </button>
           ))}
@@ -2164,7 +2200,7 @@ function InspectorTab() {
           <div className="flex items-center gap-1 p-1 mt-2" style={{ borderRadius: 999, backgroundColor: T.muteBg }}>
             {["ratio", "absolute"].map((m) => (
               <button key={m} onClick={() => setSync({ ...sync, scrollMode: m })} className="flex-1 py-1.5 font-medium capitalize transition-colors"
-                style={{ borderRadius: 999, fontSize: 11.5, backgroundColor: sync.scrollMode === m ? T.onInk : "transparent", color: sync.scrollMode === m ? T.ink : T.ink2, boxShadow: sync.scrollMode === m ? T.shadow : "none" }}>{m}</button>
+                style={{ borderRadius: 999, fontSize: 11.5, backgroundColor: sync.scrollMode === m ? T.card : "transparent", color: sync.scrollMode === m ? T.ink : T.ink2, boxShadow: sync.scrollMode === m ? T.shadow : "none" }}>{m}</button>
             ))}
           </div>
           <p className="mt-2" style={{ fontSize: 10.5, color: T.ink3, lineHeight: 1.5 }}>
@@ -2409,7 +2445,7 @@ function SettingsTab() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono" style={{ fontSize: 12, fontWeight: 600 }}>{s.prop}</span>
                   <span className="font-mono truncate" style={{ fontSize: 11.5, color: T.ink3 }}>{s.el}</span>
-                  {s.state === "stale" && <Pill fg={T.almost} bg={T.onInk}>premise changed</Pill>}
+                  {s.state === "stale" && <Pill fg={T.almost} bg={T.card}>premise changed</Pill>}
                 </div>
                 <div className="mt-1" style={{ fontSize: 12, color: T.ink2 }}>{s.reason}</div>
                 <div className="mt-0.5" style={{ fontSize: 11, color: T.ink3 }}>{s.author} · premise was {s.premise}</div>
@@ -2552,7 +2588,7 @@ export default function DikyaDQA() {
                       {!rail && <span className="flex-1 text-left" style={{ fontSize: 13.5, fontWeight: on ? 600 : 500 }}>{it.label}</span>}
                       {it.badge && !rail && (
                         <span className="flex items-center justify-center font-semibold"
-                          style={{ minWidth: 20, height: 18, padding: "0 6px", borderRadius: 999, fontSize: 10.5, backgroundColor: on ? T.onInk : T.muteBg, color: on ? T.accent : T.ink2 }}>
+                          style={{ minWidth: 20, height: 18, padding: "0 6px", borderRadius: 999, fontSize: 10.5, backgroundColor: on ? T.card : T.muteBg, color: on ? T.accent : T.ink2 }}>
                           {it.badge}
                         </span>
                       )}
@@ -2600,7 +2636,7 @@ export default function DikyaDQA() {
         <div className="flex-1 min-w-0">
           <header className="sticky top-0 z-20 flex items-center gap-4 px-6"
             style={{ height: 64, backgroundColor: dark ? "rgba(11,11,13,.82)" : "rgba(244,244,245,.85)", backdropFilter: "blur(12px)" }}>
-            <div className="flex items-center gap-2 px-3 flex-1" style={{ maxWidth: 380, height: 36, borderRadius: 999, backgroundColor: T.onInk, boxShadow: T.shadow }}>
+            <div className="flex items-center gap-2 px-3 flex-1" style={{ maxWidth: 380, height: 36, borderRadius: 999, backgroundColor: T.card, boxShadow: T.shadow }}>
               <Search size={14} color={T.ink3} />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a target, finding or layer…"
                 className="w-full bg-transparent outline-none" style={{ fontSize: 12.5 }} />
